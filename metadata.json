@@ -1,0 +1,10 @@
+{
+  "name": "Voice of Arts",
+  "description": "藝術之聲 - 結合 AI 反思與藝術導覽的互動應用程式",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
