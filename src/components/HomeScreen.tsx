@@ -4,6 +4,8 @@ import artwork1 from '@/assets/artwork_1.png';
 import artwork2 from '@/assets/artwork_2.jpg';
 import artwork3 from '@/assets/artwork_3.png';
 import artwork4 from '@/assets/artwork_4.jpg';
+import artwork5 from '@/assets/artwork_5.jpg';
+import artwork6 from '@/assets/artwork_6.jpg';
 
 interface HomeScreenProps {
   onScan: (base64Image?: string) => void;
@@ -14,6 +16,8 @@ const ARTWORKS = [
   { id: '2', name: '藍帽與狗', image: artwork2 },
   { id: '3', name: '彈撥樂器系列', image: artwork3 },
   { id: '4', name: '紅椅黑美人', image: artwork4 },
+  { id: '5', name: '琴聲美人', image: artwork5 },
+  { id: '6', name: '紅毯黑美人', image: artwork6 },
 ];
 
 async function imageUrlToBase64(url: string): Promise<string> {
