@@ -64,6 +64,7 @@ export default function App() {
           <ReflectionScreen 
             image={uploadedImage}
             hotspots={hotspots}
+            artworkId={activeArtworkId}
             onBack={() => setCurrentScreen('observation')}
             onFinish={(history) => {
               setChatHistory(history);

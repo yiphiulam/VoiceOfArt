@@ -14,11 +14,12 @@ export interface Message {
 interface ReflectionScreenProps {
   image?: string | null;
   hotspots?: Hotspot[];
+  artworkId?: string | null;
   onBack: () => void;
   onFinish: (history: Message[]) => void;
 }
 
-export function ReflectionScreen({ image, hotspots, onBack, onFinish }: ReflectionScreenProps) {
+export function ReflectionScreen({ image, hotspots, artworkId, onBack, onFinish }: ReflectionScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -40,7 +41,7 @@ export function ReflectionScreen({ image, hotspots, onBack, onFinish }: Reflecti
       fetch('/api/reflection-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64Image: image, hotspots, history: [] })
+        body: JSON.stringify({ base64Image: image, hotspots, artworkId, history: [] })
       })
       .then(res => res.json())
       .then(data => {
@@ -59,7 +60,7 @@ export function ReflectionScreen({ image, hotspots, onBack, onFinish }: Reflecti
       });
     }
     return () => { isMounted = false; };
-  }, [image, hotspots, messages.length]);
+  }, [image, hotspots, messages.length, artworkId]);
 
   const handleSend = async (customText?: string) => {
     const textToSend = typeof customText === 'string' ? customText : inputText;
@@ -83,6 +84,7 @@ export function ReflectionScreen({ image, hotspots, onBack, onFinish }: Reflecti
         body: JSON.stringify({ 
           base64Image: image, 
           hotspots, 
+          artworkId,
           history: updatedMessages 
         })
       });
