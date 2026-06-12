@@ -1,13 +1,36 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Camera, ImageUp, Info } from 'lucide-react';
+import artwork1 from '@/assets/artwork_1.png';
+import artwork2 from '@/assets/artwork_2.jpg';
+import artwork3 from '@/assets/artwork_3.png';
+import artwork4 from '@/assets/artwork_4.jpg';
 
 interface HomeScreenProps {
   onScan: (base64Image?: string) => void;
 }
 
+const ARTWORKS = [
+  { id: '1', name: '傳統工藝人物系列', image: artwork1 },
+  { id: '2', name: '藍帽與狗', image: artwork2 },
+  { id: '3', name: '彈撥樂器系列', image: artwork3 },
+  { id: '4', name: '紅椅黑美人', image: artwork4 },
+];
+
+async function imageUrlToBase64(url: string): Promise<string> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function HomeScreen({ onScan }: HomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -29,6 +52,18 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
     }
   };
 
+  const handleSelectArtwork = async (art: typeof ARTWORKS[0]) => {
+    setLoadingId(art.id);
+    try {
+      const base64 = await imageUrlToBase64(art.image);
+      onScan(base64);
+    } catch (err) {
+      console.error("Failed to load artwork image:", err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#FDFCFB] text-[#1A1A1A] font-sans relative overflow-hidden">
       
@@ -41,23 +76,53 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
           <p className="text-[10px] tracking-widest text-gray-400 mt-2 uppercase font-medium">藝術之聲・探索伴侶</p>
         </header>
 
-        {/* Viewfinder Simulator */}
+        {/* Viewfinder Simulator & Interactive Gallery */}
         <div className="px-8 flex flex-col items-center justify-center w-full max-w-sm mx-auto mb-8">
-          <div className="w-full aspect-[4/5] bg-[#F4F1ED] border border-gray-100 shadow-xl relative overflow-hidden flex flex-col items-center justify-center">
-            <div className="absolute inset-0 border-[16px] border-white/40 pointer-events-none" />
+          <div className="w-full aspect-[4/5] bg-[#F4F1ED] border border-gray-100 shadow-xl relative overflow-hidden flex flex-col p-6">
+            <div className="absolute inset-0 border-[12px] border-white/40 pointer-events-none z-10" />
 
             {/* Scanner corner accents indicating focus */}
-            <div className="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-white" />
-            <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-white" />
-            <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-white" />
-            <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-white" />
+            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white z-10" />
+            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white z-10" />
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white z-10" />
+            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white z-10" />
 
-            <div className="w-24 h-32 mb-6 bg-[#C4A484] shadow-md flex items-center justify-center">
-               <span className="text-[6px] text-[#2D2D2D] opacity-40 uppercase tracking-[0.3em] font-serif italic rotate-90 whitespace-nowrap">Liang Yi-fen</span>
+            <div className="text-center mt-2 mb-4 z-10">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-bold mb-1">Interactive Gallery</p>
+              <p className="text-[11px] font-light text-[#1A1A1A] tracking-wider">點選經典畫作開啟 AI 藝術導覽</p>
             </div>
 
-            <p className="text-xs tracking-[0.4em] uppercase text-gray-400 z-10">請將作品對準框內</p>
-            <p className="text-[10px] text-gray-400 mt-2 z-10 font-light">如：梁奕焚《傳統工藝人物系列》</p>
+            {/* 2x2 Grid of Artworks */}
+            <div className="flex-1 grid grid-cols-2 gap-3 p-1 z-10 relative overflow-hidden">
+              {ARTWORKS.map((art) => (
+                <button
+                  key={art.id}
+                  disabled={loadingId !== null}
+                  onClick={() => handleSelectArtwork(art)}
+                  className="group relative border border-gray-200/50 overflow-hidden bg-white hover:border-[#1A1A1A] transition-all flex flex-col items-stretch cursor-pointer disabled:opacity-50"
+                >
+                  <div className="flex-1 relative overflow-hidden">
+                    <img 
+                      src={art.image} 
+                      alt={art.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {loadingId === art.id && (
+                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-white py-1.5 px-2 border-t border-gray-100 text-center">
+                    <p className="text-[9px] text-[#1A1A1A] tracking-wider truncate font-medium">{art.name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            <div className="text-center mt-3 z-10">
+              <p className="text-[9px] text-gray-400 font-light tracking-widest uppercase">或使用下方相機對準實體畫作</p>
+            </div>
           </div>
         </div>
 
