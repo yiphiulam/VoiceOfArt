@@ -4,8 +4,9 @@ import { ScanningScreen } from './components/ScanningScreen';
 import { ObservationScreen } from './components/ObservationScreen';
 import { ReflectionScreen, Message } from './components/ReflectionScreen';
 import { JournalScreen } from './components/JournalScreen';
+import { ARCameraScreen } from './components/ARCameraScreen';
 
-type ScreenType = 'home' | 'scanning' | 'observation' | 'reflection' | 'journal';
+type ScreenType = 'home' | 'scanning' | 'observation' | 'reflection' | 'journal' | 'ar';
 
 export interface Hotspot {
   id: string;
@@ -27,10 +28,13 @@ export default function App() {
       <main className="w-full h-[100dvh] sm:h-[844px] sm:max-h-[90vh] sm:max-w-[390px] relative overflow-hidden sm:rounded-[2rem] sm:border-[8px] border-neutral-200 shadow-2xl bg-[#FDFCFB]">
         
         {currentScreen === 'home' && (
-          <HomeScreen onScan={(base64?: string) => {
-            if (base64) setUploadedImage(base64);
-            setCurrentScreen('scanning');
-          }} />
+          <HomeScreen 
+            onScan={(base64?: string) => {
+              if (base64) setUploadedImage(base64);
+              setCurrentScreen('scanning');
+            }} 
+            onAR={() => setCurrentScreen('ar')}
+          />
         )}
         
         {currentScreen === 'scanning' && (
@@ -76,6 +80,10 @@ export default function App() {
               setCurrentScreen('home');
             }}
           />
+        )}
+
+        {currentScreen === 'ar' && (
+          <ARCameraScreen onBack={() => setCurrentScreen('home')} />
         )}
 
       </main>

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, ImageUp, Info } from 'lucide-react';
+import { Camera, ImageUp, Info, Sparkles } from 'lucide-react';
 import artwork1 from '@/assets/artwork_1.png';
 import artwork2 from '@/assets/artwork_2.jpg';
 import artwork3 from '@/assets/artwork_3.png';
@@ -9,6 +9,7 @@ import artwork6 from '@/assets/artwork_6.jpg';
 
 interface HomeScreenProps {
   onScan: (base64Image?: string) => void;
+  onAR: () => void;
 }
 
 const ARTWORKS = [
@@ -31,17 +32,12 @@ async function imageUrlToBase64(url: string): Promise<string> {
   });
 }
 
-export function HomeScreen({ onScan }: HomeScreenProps) {
+export function HomeScreen({ onScan, onAR }: HomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleCameraClick = () => {
-    cameraInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,14 +176,6 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
         
         <input 
           type="file" 
-          ref={cameraInputRef} 
-          onChange={handleFileChange} 
-          accept="image/*"
-          capture="environment"
-          className="hidden" 
-        />
-        <input 
-          type="file" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
           accept="image/*" 
@@ -195,19 +183,19 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
         />
 
         <button 
-          onClick={handleCameraClick}
+          onClick={handleUploadClick}
           className="flex-1 py-4 bg-[#1A1A1A] text-white flex items-center justify-center gap-2.5 hover:bg-[#333] transition-colors shadow-sm"
         >
-          <Camera className="w-4 h-4" />
-          <span className="uppercase tracking-[0.2em] text-[11px] font-medium">拍照掃描</span>
+          <Sparkles className="w-4 h-4" />
+          <span className="uppercase tracking-[0.2em] text-[11px] font-medium">與畫作互動</span>
         </button>
 
         <button 
-          onClick={handleUploadClick}
+          onClick={onAR}
           className="flex-1 py-4 border border-[#1A1A1A] bg-white text-[#1A1A1A] flex items-center justify-center gap-2.5 hover:bg-gray-50 transition-colors shadow-sm"
         >
-          <ImageUp className="w-4 h-4" />
-          <span className="uppercase tracking-[0.2em] text-[11px] font-medium">上傳圖片</span>
+          <Camera className="w-4 h-4" />
+          <span className="uppercase tracking-[0.2em] text-[11px] font-medium">AR 相機</span>
         </button>
       </div>
     </div>
