@@ -20,7 +20,9 @@ async function getOrUploadRagFile() {
     try {
       const uploadResult = await ai.files.upload({
         file: filePath,
-        mimeType: "application/pdf",
+        config: {
+          mimeType: "application/pdf",
+        }
       });
       cachedRagFile = { uri: uploadResult.uri, mimeType: uploadResult.mimeType };
       console.log(`RAG document uploaded successfully. URI: ${cachedRagFile.uri}`);
