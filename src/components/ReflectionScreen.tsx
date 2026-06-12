@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, ArrowLeft, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Hotspot } from '../App';
+import liangAvatar from '@/assets/liang_yifen_avatar.png';
 
 export interface Message {
   id: string;
@@ -107,68 +108,101 @@ export function ReflectionScreen({ image, hotspots, onBack, onFinish }: Reflecti
   return (
     <div className="flex flex-col h-full bg-[#FDFCFB] text-[#1A1A1A] font-sans relative">
       {/* Header */}
-      <header className="px-6 py-6 flex items-center justify-between border-b border-gray-100 bg-[#FDFCFB] z-10 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+      <header className="px-6 py-4 flex items-center justify-between border-b border-gray-100 bg-[#FDFCFB] z-10 shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.01)]">
+        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors">
           <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
         </button>
-        <div className="text-center">
-          <p className="text-[9px] tracking-[0.2em] uppercase text-gray-400 font-bold mb-1">Reflection</p>
-          <h1 className="text-xs font-light tracking-[0.2em] uppercase">AI Companion</h1>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-[#EBE6DD] bg-[#FAF8F5]">
+            <img src={liangAvatar} alt="梁奕焚老師" className="w-full h-full object-cover scale-105" />
+          </div>
+          <div className="text-left">
+            <h1 className="text-xs font-bold text-[#1A1A1A] tracking-wider">與梁奕焚老師對話</h1>
+            <p className="text-[9px] tracking-widest text-gray-400 font-medium">藝術與心靈的對話</p>
+          </div>
         </div>
-        <div className="w-9" /> {/* Spacer for centering */}
+        <div className="w-9" /> {/* Spacer for centering/aligning */}
       </header>
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 scroll-smooth bg-[#FDFCFB]">
+      <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6 scroll-smooth bg-[#FDFCFB]">
+        
+        {/* Welcome Card from Teacher Liang */}
+        <div className="bg-[#FAF8F5] border border-[#EBE6DD] p-5 rounded-2xl flex gap-4 items-center mb-2 shadow-sm text-left">
+          <div className="w-12 h-12 rounded-full overflow-hidden border border-[#1A1A1A]/10 bg-white flex-shrink-0">
+            <img src={liangAvatar} alt="梁奕焚老師" className="w-full h-full object-cover scale-105" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-xs font-bold text-[#1A1A1A] mb-1">關於這幅作品...</h4>
+            <p className="text-[11px] text-gray-500 leading-relaxed font-light">
+              「很高興在這裡遇見你。藝術屬於我們的心靈。對這幅畫作有什麼感受，儘管與我聊聊。」
+            </p>
+          </div>
+        </div>
+
         <AnimatePresence initial={false}>
-          {messages.map((msg, index) => (
+          {messages.map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+              className={`flex gap-3 w-full ${msg.sender === 'user' ? 'flex-row-reverse items-start' : 'flex-row items-start'}`}
             >
-              {msg.sender === 'ai' && index === 0 && (
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-5 h-5 bg-[#1A1A1A] flex items-center justify-center rounded-sm">
-                    <SparklesIcon className="w-3 h-3 text-[#FDFCFB]" />
-                  </div>
-                  <span className="text-[10px] tracking-widest uppercase font-bold text-[#1A1A1A]">Voice of Arts</span>
+              {msg.sender === 'ai' ? (
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#EBE6DD] bg-white flex-shrink-0 shadow-sm">
+                  <img src={liangAvatar} alt="梁奕焚老師" className="w-full h-full object-cover scale-105" />
+                </div>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#2C2A29] flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 shadow-sm">
+                  你
                 </div>
               )}
-              
-              <div 
-                className={`max-w-[85%] p-5 text-[13px] font-light leading-relaxed shadow-sm whitespace-pre-wrap
-                  ${msg.sender === 'user' 
-                    ? 'bg-[#1A1A1A] text-white rounded-2xl rounded-tr-sm' 
-                    : 'bg-white border border-gray-100 text-[#2D2D2D] rounded-2xl rounded-tl-sm'
-                  }`}
-              >
-                {msg.text}
-              </div>
-              
-              {/* Context Citation Link (RAG) */}
-              {msg.source && (
-                <button 
-                  onClick={() => setShowCitation(true)}
-                  className="mt-3 flex items-start gap-1.5 opacity-60 ml-2 hover:opacity-100 transition-opacity text-left"
+
+              <div className={`flex flex-col max-w-[75%] ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                <span className="text-[9px] text-gray-400 font-bold mb-1 tracking-wider">
+                  {msg.sender === 'ai' ? '梁奕焚 老師' : '我'}
+                </span>
+                
+                <div 
+                  className={`p-4 text-[13px] font-light leading-relaxed shadow-sm whitespace-pre-wrap rounded-2xl
+                    ${msg.sender === 'user' 
+                      ? 'bg-[#2C2A29] text-white rounded-tr-sm' 
+                      : 'bg-[#FAF8F5] border border-[#EBE6DD] text-[#2D2D2D] rounded-tl-sm'
+                    }`}
                 >
-                  <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                  <p className="text-[9px] text-gray-500 uppercase tracking-wider underline underline-offset-2">{msg.source}</p>
-                </button>
-              )}
+                  {msg.text}
+                </div>
+                
+                {/* Context Citation Link (RAG) */}
+                {msg.source && (
+                  <button 
+                    onClick={() => setShowCitation(true)}
+                    className="mt-2 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity text-left"
+                  >
+                    <Info className="w-3 h-3 shrink-0 text-gray-400" />
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider underline underline-offset-2">{msg.source}</p>
+                  </button>
+                )}
+              </div>
             </motion.div>
           ))}
+          
           {isTyping && (
              <motion.div
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               className="flex items-start gap-3"
+               className="flex gap-3 items-start w-full"
              >
-                <div className="bg-white border border-gray-100 px-5 py-4 rounded-2xl rounded-tl-sm flex gap-1.5 shadow-sm h-12 items-center">
-                  <motion.div className="w-1.5 h-1.5 bg-gray-300 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
-                  <motion.div className="w-1.5 h-1.5 bg-gray-300 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} />
-                  <motion.div className="w-1.5 h-1.5 bg-gray-300 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} />
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#EBE6DD] bg-white flex-shrink-0 shadow-sm">
+                  <img src={liangAvatar} alt="梁奕焚老師" className="w-full h-full object-cover scale-105" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[9px] text-gray-400 font-bold mb-1 tracking-wider">梁奕焚 老師正在思考...</span>
+                  <div className="bg-[#FAF8F5] border border-[#EBE6DD] px-5 py-4 rounded-2xl rounded-tl-sm flex gap-1.5 shadow-sm h-12 items-center">
+                    <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
+                    <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} />
+                    <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} />
+                  </div>
                 </div>
              </motion.div>
           )}
