@@ -56,7 +56,7 @@ export function ScanningScreen({ base64Image, onBack, onComplete }: ScanningScre
   }, [base64Image, onComplete]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-[#1A1A1A] text-[#FDFCFB] p-8 text-center font-sans relative">
+    <div className="flex flex-col items-center justify-center h-full bg-[#1A1A1A] text-[#FDFCFB] p-8 text-center font-sans relative overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* Visual Animation Container */}
       <motion.div
         animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}

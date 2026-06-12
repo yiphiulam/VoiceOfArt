@@ -30,7 +30,7 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFCFB] text-[#1A1A1A] font-sans">
+    <div className="flex flex-col h-full bg-[#FDFCFB] text-[#1A1A1A] font-sans overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* Header */}
       <header className="p-8 pt-12 flex flex-col items-center text-center">
         <h1 className="text-3xl font-light tracking-[0.2em] uppercase">Voice of Arts</h1>

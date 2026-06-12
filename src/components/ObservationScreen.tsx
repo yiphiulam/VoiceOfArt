@@ -101,7 +101,7 @@ export function ObservationScreen({ image, hotspots = [], onContinue }: Observat
       </div>
 
       {/* Observation Hint Card (Always visible unless bottom sheet is up) */}
-      <div className="flex-1 px-8 py-8 relative bg-[#FDFCFB]">
+      <div className="flex-1 px-8 py-8 relative bg-[#FDFCFB] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence>
           {!activeHotspot && (
             <motion.div 
@@ -136,7 +136,7 @@ export function ObservationScreen({ image, hotspots = [], onContinue }: Observat
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute bottom-0 left-0 w-full bg-[#FDFCFB] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border-t border-gray-100 z-30"
+            className="absolute bottom-0 left-0 w-full max-h-[85%] overflow-y-auto bg-[#FDFCFB] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border-t border-gray-100 z-30"
           >
             <div className="p-8 pb-10">
               <div className="flex justify-between items-start mb-6">
