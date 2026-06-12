@@ -96,16 +96,16 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
               <p className="text-[11px] font-light text-[#1A1A1A] tracking-wider">點選經典畫作開啟 AI 藝術導覽</p>
             </div>
 
-            {/* 2x2 Grid of Artworks */}
-            <div className="flex-1 grid grid-cols-2 gap-3 p-1 z-10 relative overflow-hidden">
+            {/* Horizontal Swipe/Scroll List of Artworks */}
+            <div className="flex-1 flex gap-4 overflow-x-auto pb-3 pt-1 z-10 scroll-smooth snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {ARTWORKS.map((art) => (
                 <button
                   key={art.id}
                   disabled={loadingId !== null}
                   onClick={() => handleSelectArtwork(art)}
-                  className="group relative border border-gray-200/50 overflow-hidden bg-white hover:border-[#1A1A1A] transition-all flex flex-col items-stretch cursor-pointer disabled:opacity-50"
+                  className="group w-36 flex-shrink-0 snap-start relative border border-gray-200/50 overflow-hidden bg-white hover:border-[#1A1A1A] transition-all flex flex-col items-stretch cursor-pointer disabled:opacity-50 shadow-sm"
                 >
-                  <div className="flex-1 relative overflow-hidden">
+                  <div className="flex-1 relative overflow-hidden aspect-[3/4]">
                     <img 
                       src={art.image} 
                       alt={art.name} 
@@ -117,8 +117,8 @@ export function HomeScreen({ onScan }: HomeScreenProps) {
                       </div>
                     )}
                   </div>
-                  <div className="bg-white py-1.5 px-2 border-t border-gray-100 text-center">
-                    <p className="text-[9px] text-[#1A1A1A] tracking-wider truncate font-medium">{art.name}</p>
+                  <div className="bg-white py-2 px-2 border-t border-gray-100 text-center shrink-0">
+                    <p className="text-[10px] text-[#1A1A1A] tracking-wider truncate font-medium">{art.name}</p>
                   </div>
                 </button>
               ))}
