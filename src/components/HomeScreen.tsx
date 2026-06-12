@@ -8,7 +8,7 @@ import artwork5 from '@/assets/artwork_5.jpg';
 import artwork6 from '@/assets/artwork_6.jpg';
 
 interface HomeScreenProps {
-  onScan: (base64Image?: string) => void;
+  onScan: (base64Image?: string, artworkId?: string) => void;
   onAR: () => void;
 }
 
@@ -46,7 +46,7 @@ export function HomeScreen({ onScan, onAR }: HomeScreenProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        onScan(base64String);
+        onScan(base64String, 'custom');
       };
       reader.readAsDataURL(file);
     }
@@ -56,7 +56,7 @@ export function HomeScreen({ onScan, onAR }: HomeScreenProps) {
     setLoadingId(art.id);
     try {
       const base64 = await imageUrlToBase64(art.image);
-      onScan(base64);
+      onScan(base64, art.id);
     } catch (err) {
       console.error("Failed to load artwork image:", err);
     } finally {

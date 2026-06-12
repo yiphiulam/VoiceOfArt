@@ -75,6 +75,11 @@ async function startServer() {
         return res.status(400).json({ error: "No image provided" });
       }
 
+      if (!process.env.GEMINI_API_KEY) {
+        console.warn("GEMINI_API_KEY is not configured. Returning empty array for local fallback.");
+        return res.json({ hotspots: [] });
+      }
+
       // Extract correct mime type
       const match = base64Image.match(/^data:(image\/\w+);base64,/);
       const mimeType = match ? match[1] : "image/jpeg";
@@ -142,6 +147,14 @@ async function startServer() {
   app.post("/api/reflection-chat", async (req, res) => {
     try {
       const { base64Image, history, hotspots } = req.body;
+
+      if (!process.env.GEMINI_API_KEY) {
+        console.warn("GEMINI_API_KEY is not configured. Returning warm fallback offline message.");
+        return res.json({ 
+          reply: "你好，我是梁奕焚。現在系統尚無金鑰配置，但我依然很高興你能來欣賞我的作品。你覺得畫作帶給你什麼樣的感受呢？雖然我目前處於離線狀態，但我深信，藝術的共鳴與心靈的交流是無所不在的。", 
+          source: "本地離線模式" 
+        });
+      }
       
       let ragFilePart: any[] = [];
       try {
@@ -232,6 +245,15 @@ async function startServer() {
   app.post("/api/generate-journal", async (req, res) => {
     try {
       const { history } = req.body;
+
+      if (!process.env.GEMINI_API_KEY) {
+        console.warn("GEMINI_API_KEY is not configured. Returning offline mock journal.");
+        return res.json({
+          perspective: "我覺得這幅作品觸動了我的內心，帶給我平靜與美感。",
+          context: "梁奕焚老師筆下的常民生活與寫意線條，致力於展現人與生俱來的純粹生命天賦。",
+          generatedImage: null
+        });
+      }
       
       const prompt = `請根據以下使用者與AI藝術伴侶的對話紀錄，總結使用者的核心觀點（My Perspective）以及對應的藝術文化脈絡（Cultural Context）。
       

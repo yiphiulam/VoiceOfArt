@@ -6,15 +6,13 @@ import type { Hotspot } from '../App';
 interface ObservationScreenProps {
   image?: string | null;
   hotspots?: Hotspot[];
+  artworkId?: string | null;
   onContinue: () => void;
   onBack?: () => void;
 }
 
-export function ObservationScreen({ image, hotspots = [], onContinue }: ObservationScreenProps) {
-  const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
-
-  // Use dynamic hotspots or fallback to default if none provided
-  const displayHotspots = hotspots.length > 0 ? hotspots : [
+const ARTWORK_FALLBACKS: Record<string, Hotspot[]> = {
+  '1': [
     {
       id: 'bg',
       x: '25%',
@@ -36,7 +34,150 @@ export function ObservationScreen({ image, hotspots = [], onContinue }: Observat
       title: '傳統展示架與物件',
       desc: '視覺元素分析 (VLM)：\n右側有三層木製展示架，上面擺放著傳統民俗玩具，為畫面增添了時空背景的敘事感與生活氣息。'
     }
-  ];
+  ],
+  '2': [
+    {
+      id: 'blue_hat',
+      x: '45%',
+      y: '20%',
+      title: '顯眼的藍色帽子',
+      desc: '視覺元素分析 (VLM)：\n主角頭戴鮮明飽和的藍色帽子，成為畫面的視覺焦點，與背景溫暖色系形成冷暖平衡。'
+    },
+    {
+      id: 'dog',
+      x: '70%',
+      y: '75%',
+      title: '依偎的寵物小狗',
+      desc: '視覺元素分析 (VLM)：\n身旁描繪了一隻溫順的小狗，流露出人與動物和諧相處的溫馨生活情調，增添常民生活的溫情。'
+    },
+    {
+      id: 'posture',
+      x: '35%',
+      y: '50%',
+      title: '簡約的肢體線條',
+      desc: '視覺元素分析 (VLM)：\n人物線條圓潤且極度簡化，融合了立體派的空間重組與東方傳統寫意神韻。'
+    }
+  ],
+  '3': [
+    {
+      id: 'instrument',
+      x: '50%',
+      y: '55%',
+      title: '懷抱的彈撥樂器',
+      desc: '視覺元素分析 (VLM)：\n主角雙手環抱著傳統樂器，彈奏的姿態營造出聽覺與視覺交融的詩意氛圍。'
+    },
+    {
+      id: 'yellow_light',
+      x: '20%',
+      y: '30%',
+      title: '溫暖的黃橙光暈',
+      desc: '視覺元素分析 (VLM)：\n暖黃色調的背景散發著沉靜的藝術氣質，烘托出彈琴者專注而和諧的心境。'
+    },
+    {
+      id: 'face',
+      x: '48%',
+      y: '22%',
+      title: '側臉線條與留白',
+      desc: '視覺元素分析 (VLM)：\n以乾淨的黑線勾勒出的側臉，造型神似傳統佛像的平和法相，神聖而純粹。'
+    }
+  ],
+  '4': [
+    {
+      id: 'black_beauty',
+      x: '50%',
+      y: '45%',
+      title: '自信傲然的黑美人',
+      desc: '視覺元素分析 (VLM)：\n畫中女性以純黑膚色呈現，輪廓大膽有力，顛覆傳統審美，展現極具現代張力的女性軀體。'
+    },
+    {
+      id: 'red_chair',
+      x: '42%',
+      y: '70%',
+      title: '鮮亮的朱紅座椅',
+      desc: '視覺元素分析 (VLM)：\n黑美人坐於朱紅木椅上，鮮明對比的色彩撞擊，釋放出強烈的生命動能與舞台感。'
+    },
+    {
+      id: 'carpet',
+      x: '75%',
+      y: '85%',
+      title: '裝飾性的底座線條',
+      desc: '視覺元素分析 (VLM)：\n椅腳下的幾何毯面結構，融合野獸派的純粹色彩與東方民俗圖案的點綴。'
+    }
+  ],
+  '5': [
+    {
+      id: 'piano_strings',
+      x: '60%',
+      y: '60%',
+      title: '琴鍵與線條律動',
+      desc: '視覺元素分析 (VLM)：\n畫中女子身前橫臥著鋼琴或琴弦結構，黑白線條流瀉出音樂律動，與人物動態呼應。'
+    },
+    {
+      id: 'pose',
+      x: '35%',
+      y: '35%',
+      title: '專注的演奏姿態',
+      desc: '視覺元素分析 (VLM)：\n女子低頭彈奏，手臂線條流暢延伸，勾勒出陶醉於音樂世界的優雅身形。'
+    },
+    {
+      id: 'background_contrast',
+      x: '20%',
+      y: '75%',
+      title: '民俗圖案與背景交界',
+      desc: '視覺元素分析 (VLM)：\n背景與地面交界處飾有東方傳統工藝色彩的花紋，營造出豐富的層次質感與空間層次。'
+    }
+  ],
+  '6': [
+    {
+      id: 'bg_dots',
+      x: '40%',
+      y: '25%',
+      title: '星夜與花雨般的背景',
+      desc: '視覺元素分析 (VLM)：\n黑色背景中綴滿了粉紅、白色與黃色的斑點，猶如繁星夜空或落英繽紛，營造出浪漫而夢幻的意境。'
+    },
+    {
+      id: 'reclining_body',
+      x: '65%',
+      y: '80%',
+      title: '純粹的黑色裸女身軀',
+      desc: '視覺元素分析 (VLM)：\n黑美人以極簡的純黑線條與色塊呈現，與背後的繽紛斑點及下方的紅毯形成強烈對比，展現原始純粹的生命力。'
+    },
+    {
+      id: 'yellow_chair',
+      x: '78%',
+      y: '38%',
+      title: '簡練的靠背木椅',
+      desc: '視覺元素分析 (VLM)：\n黃白相間的木質靠背椅靜置於畫面一側，其流暢的線條和簡約結構，為畫面增添了空間與生活感的平衡。'
+    }
+  ]
+};
+
+const GENERIC_FALLBACK: Hotspot[] = [
+  {
+    id: 'custom_color',
+    x: '30%',
+    y: '40%',
+    title: '畫面色彩張力',
+    desc: '視覺元素分析 (VLM)：\n畫作中大膽純粹的色彩對比，反映出梁奕焚老師筆下豐沛的情感力量與東方傳統氛圍。'
+  },
+  {
+    id: 'custom_structure',
+    x: '65%',
+    y: '60%',
+    title: '主體構圖與寫意線條',
+    desc: '視覺元素分析 (VLM)：\n畫面核心的主體線條或人物輪廓，簡練而傳神，體現了藝術家對純粹美感的追求。'
+  }
+];
+
+export function ObservationScreen({ image, hotspots = [], artworkId, onContinue }: ObservationScreenProps) {
+  const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
+
+  // Use dynamic hotspots or fallback to specific artwork details if none provided
+  const fallbacks = artworkId && ARTWORK_FALLBACKS[artworkId] 
+    ? ARTWORK_FALLBACKS[artworkId] 
+    : GENERIC_FALLBACK;
+
+  const displayHotspots = hotspots.length > 0 ? hotspots : fallbacks;
 
   const activeData = displayHotspots.find(h => h.id === activeHotspot);
 

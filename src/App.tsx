@@ -19,6 +19,7 @@ export interface Hotspot {
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [activeArtworkId, setActiveArtworkId] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
@@ -29,8 +30,9 @@ export default function App() {
         
         {currentScreen === 'home' && (
           <HomeScreen 
-            onScan={(base64?: string) => {
+            onScan={(base64?: string, artworkId?: string) => {
               if (base64) setUploadedImage(base64);
+              if (artworkId) setActiveArtworkId(artworkId);
               setCurrentScreen('scanning');
             }} 
             onAR={() => setCurrentScreen('ar')}
@@ -52,6 +54,7 @@ export default function App() {
           <ObservationScreen 
             image={uploadedImage}
             hotspots={hotspots}
+            artworkId={activeArtworkId}
             onBack={() => setCurrentScreen('scanning')}
             onContinue={() => setCurrentScreen('reflection')}
           />
@@ -77,6 +80,7 @@ export default function App() {
               setUploadedImage(null);
               setHotspots([]);
               setChatHistory([]);
+              setActiveArtworkId(null);
               setCurrentScreen('home');
             }}
           />
