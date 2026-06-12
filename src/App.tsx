@@ -5,6 +5,8 @@ import { ObservationScreen } from './components/ObservationScreen';
 import { ReflectionScreen, Message } from './components/ReflectionScreen';
 import { JournalScreen } from './components/JournalScreen';
 import { ARCameraScreen } from './components/ARCameraScreen';
+import { JournalLibraryModal } from './components/JournalLibraryModal';
+import { AnimatePresence } from 'motion/react';
 
 type ScreenType = 'home' | 'scanning' | 'observation' | 'reflection' | 'journal' | 'ar';
 
@@ -22,6 +24,7 @@ export default function App() {
   const [activeArtworkId, setActiveArtworkId] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   return (
     <div className="w-full min-h-screen bg-neutral-100 flex items-center justify-center overflow-hidden font-sans">
@@ -36,6 +39,7 @@ export default function App() {
               setCurrentScreen('scanning');
             }} 
             onAR={() => setCurrentScreen('ar')}
+            onViewLibrary={() => setShowLibrary(true)}
           />
         )}
         
@@ -77,6 +81,8 @@ export default function App() {
           <JournalScreen 
             image={uploadedImage}
             history={chatHistory}
+            artworkId={activeArtworkId}
+            onViewLibrary={() => setShowLibrary(true)}
             onHome={() => {
               setUploadedImage(null);
               setHotspots([]);
@@ -90,6 +96,12 @@ export default function App() {
         {currentScreen === 'ar' && (
           <ARCameraScreen onBack={() => setCurrentScreen('home')} />
         )}
+
+        <AnimatePresence>
+          {showLibrary && (
+            <JournalLibraryModal onClose={() => setShowLibrary(false)} />
+          )}
+        </AnimatePresence>
 
       </main>
     </div>

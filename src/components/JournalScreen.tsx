@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
-import { Share2, Download, Home, Check, LoaderCircle } from "lucide-react";
+import { Share2, Download, Home, Check, LoaderCircle, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Message } from "./ReflectionScreen";
 
 interface JournalScreenProps {
   image?: string | null;
   history?: Message[];
+  artworkId?: string | null;
+  onViewLibrary: () => void;
   onHome: () => void;
 }
 
-export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
+export function JournalScreen({ image, history, artworkId, onViewLibrary, onHome }: JournalScreenProps) {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [perspective, setPerspective] = useState<string>("");
   const [context, setContext] = useState<string>("");
+  const [sentiment, setSentiment] = useState<string>("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -23,13 +27,14 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
       fetch("/api/generate-journal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history }),
+        body: JSON.stringify({ history, artworkId }),
       })
         .then((res) => res.json())
         .then((data) => {
           if (!isMounted) return;
           setPerspective(data.perspective || "");
           setContext(data.context || "");
+          setSentiment(data.sentiment || "");
           if (data.generatedImage) {
             setGeneratedImage(data.generatedImage);
           }
@@ -45,7 +50,46 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
     return () => {
       isMounted = false;
     };
-  }, [history]);
+  }, [history, artworkId]);
+
+  function getArtworkTitleById(id?: string | null): string {
+    switch (id) {
+      case '1': return '傳統工藝人物系列';
+      case '2': return '藍帽與狗';
+      case '3': return '彈撥樂器系列';
+      case '4': return '紅椅黑美人';
+      case '5': return '琴聲美人';
+      case '6': return '紅毯黑美人';
+      default: return '自定義作品互動';
+    }
+  }
+
+  const handleSaveToLibrary = () => {
+    if (isSaved) return;
+
+    const savedRecord = {
+      id: Date.now().toString(),
+      artworkTitle: getArtworkTitleById(artworkId),
+      artworkImage: image || "",
+      perspective,
+      context,
+      sentiment,
+      generatedImage,
+      date: new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    };
+
+    try {
+      const existingStr = localStorage.getItem('voice_of_art_journals');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      existing.unshift(savedRecord);
+      localStorage.setItem('voice_of_art_journals', JSON.stringify(existing));
+      setIsSaved(true);
+      handleAction("成功儲存至數位日誌庫！");
+    } catch (err) {
+      console.error("Failed to save journal to local library:", err);
+      handleAction("儲存失敗，請重試");
+    }
+  };
 
   const handleAction = (msg: string) => {
     setToastMsg(msg);
@@ -70,9 +114,9 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
     } else {
       try {
         await navigator.clipboard.writeText(shareText);
-        handleAction("不支援分享，已複製內容至剪貼簿！");
+        handleAction("已複製內容至剪貼簿！");
       } catch (err) {
-        handleAction("已開啟分享選單");
+        handleAction("不支援分享");
       }
     }
   };
@@ -80,13 +124,23 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
   return (
     <div className="flex flex-col h-full bg-[#FDFCFB] text-[#1A1A1A] font-sans relative">
       {/* Header */}
-      <header className="px-8 py-6 pt-10 text-center shrink-0">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium mb-1">
-          Your Exhibition Insight
-        </p>
-        <h1 className="text-xl font-light tracking-widest uppercase">
-          藝術日誌
-        </h1>
+      <header className="px-6 py-6 pt-10 flex items-center justify-between shrink-0">
+        <div className="w-8" /> {/* Spacer */}
+        <div className="text-center">
+          <p className="text-[9px] tracking-[0.2em] uppercase text-gray-400 font-medium mb-1">
+            Your Exhibition Insight
+          </p>
+          <h1 className="text-xl font-light tracking-widest uppercase">
+            藝術日誌
+          </h1>
+        </div>
+        <button 
+          onClick={onViewLibrary} 
+          className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-[#1A1A1A] flex items-center justify-center shrink-0"
+          title="我的日誌庫"
+        >
+          <BookOpen className="w-5 h-5" />
+        </button>
       </header>
 
       {/* Journal Card Area */}
@@ -126,12 +180,19 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
               )}
             </div>
 
-            {/* Details */}
-            <div className="mb-6">
-              <h2 className="text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase mb-1">
-                Artist & Work
-              </h2>
-              <p className="text-sm font-medium tracking-wider">我的觀察日誌</p>
+            {/* Details & Emotion Tag */}
+            <div className="mb-6 flex justify-between items-start">
+              <div>
+                <h2 className="text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase mb-1">
+                  Artist & Work
+                </h2>
+                <p className="text-sm font-medium tracking-wider">我的觀察日誌</p>
+              </div>
+              {sentiment && (
+                <div className="px-2.5 py-1 bg-[#FAF8F5] border border-[#EBE6DD] rounded-full text-[9px] text-[#5C5854] font-medium tracking-wide">
+                  情緒：{sentiment}
+                </div>
+              )}
             </div>
 
             <div className="w-8 h-[1px] bg-gray-200 mb-6"></div>
@@ -170,6 +231,32 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
 
       {/* Actions */}
       <div className="p-6 bg-[#FDFCFB] shrink-0 border-t border-gray-100 flex flex-col gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+        
+        {/* Save to library button */}
+        {!isLoading && (
+          <button
+            onClick={handleSaveToLibrary}
+            disabled={isSaved}
+            className={`w-full py-4 text-xs font-bold tracking-[0.25em] uppercase flex items-center justify-center gap-2 transition-colors
+              ${isSaved 
+                ? 'bg-green-50 border border-green-200 text-green-700' 
+                : 'bg-[#B23A30] text-white hover:bg-[#912f27]'
+              }`}
+          >
+            {isSaved ? (
+              <>
+                <Check className="w-4 h-4 text-green-600 animate-pulse" />
+                已儲存至我的數位日誌庫
+              </>
+            ) : (
+              <>
+                <BookOpen className="w-4 h-4" />
+                儲存至我的數位日誌庫
+              </>
+            )}
+          </button>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={() => handleAction("已儲存至相簿")}
@@ -192,7 +279,7 @@ export function JournalScreen({ image, history, onHome }: JournalScreenProps) {
         </div>
         <button
           onClick={onHome}
-          className="w-full py-4 text-gray-500 flex items-center justify-center gap-2 hover:text-[#1A1A1A] transition-colors mt-2"
+          className="w-full py-4 text-gray-500 flex items-center justify-center gap-2 hover:text-[#1A1A1A] transition-colors mt-1"
         >
           <Home className="w-4 h-4" />
           <span className="uppercase tracking-[0.2em] text-[10px] font-medium">

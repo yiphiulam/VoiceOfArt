@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, ImageUp, Info, Sparkles } from 'lucide-react';
+import { Camera, ImageUp, Info, Sparkles, BookOpen } from 'lucide-react';
 import artwork1 from '@/assets/artwork_1.png';
 import artwork2 from '@/assets/artwork_2.jpg';
 import artwork3 from '@/assets/artwork_3.png';
@@ -10,6 +10,7 @@ import artwork6 from '@/assets/artwork_6.jpg';
 interface HomeScreenProps {
   onScan: (base64Image?: string, artworkId?: string) => void;
   onAR: () => void;
+  onViewLibrary: () => void;
 }
 
 const ARTWORKS = [
@@ -32,7 +33,7 @@ async function imageUrlToBase64(url: string): Promise<string> {
   });
 }
 
-export function HomeScreen({ onScan, onAR }: HomeScreenProps) {
+export function HomeScreen({ onScan, onAR, onViewLibrary }: HomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -71,9 +72,18 @@ export function HomeScreen({ onScan, onAR }: HomeScreenProps) {
       <div className="flex-1 overflow-y-auto pb-28" style={{ scrollbarWidth: 'none' }}>
         
         {/* Header */}
-        <header className="p-8 pt-12 flex flex-col items-center text-center">
-          <h1 className="text-3xl font-light tracking-[0.2em] uppercase">Voice of Arts</h1>
-          <p className="text-[10px] tracking-widest text-gray-400 mt-2 uppercase font-medium">藝術之聲・探索伴侶</p>
+        <header className="p-8 pt-12 flex items-center justify-between text-left shrink-0">
+          <div>
+            <h1 className="text-3xl font-light tracking-[0.2em] uppercase">Voice of Arts</h1>
+            <p className="text-[10px] tracking-widest text-gray-400 mt-2 uppercase font-medium">藝術之聲・探索伴侶</p>
+          </div>
+          <button 
+            onClick={onViewLibrary} 
+            className="p-3 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors text-gray-600 hover:text-[#1A1A1A] flex items-center justify-center shrink-0"
+            title="我的數位日誌庫"
+          >
+            <BookOpen className="w-4 h-4" />
+          </button>
         </header>
 
         {/* Viewfinder Simulator & Interactive Gallery */}
