@@ -7,6 +7,35 @@ dotenv.config();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+let cachedRagFile: { uri: string; mimeType: string } | null = null;
+let uploadPromise: Promise<{ uri: string; mimeType: string }> | null = null;
+
+async function getOrUploadRagFile() {
+  if (cachedRagFile) return cachedRagFile;
+  if (uploadPromise) return uploadPromise;
+
+  uploadPromise = (async () => {
+    const filePath = path.join(process.cwd(), "DNAofLiangYifen.pdf");
+    console.log(`Uploading RAG document: ${filePath}...`);
+    try {
+      const uploadResult = await ai.files.upload({
+        file: filePath,
+        mimeType: "application/pdf",
+      });
+      cachedRagFile = { uri: uploadResult.uri, mimeType: uploadResult.mimeType };
+      console.log(`RAG document uploaded successfully. URI: ${cachedRagFile.uri}`);
+      return cachedRagFile;
+    } catch (err) {
+      console.error("Failed to upload RAG PDF to Gemini File API:", err);
+      uploadPromise = null;
+      throw err;
+    }
+  })();
+
+  return uploadPromise;
+}
+
+
 async function generateContentWithRetry(params: any, retries = 5) {
   let attempt = 0;
   while (attempt < retries) {
@@ -112,17 +141,28 @@ async function startServer() {
     try {
       const { base64Image, history, hotspots } = req.body;
       
+      let ragFilePart: any[] = [];
+      try {
+        const ragFile = await getOrUploadRagFile();
+        ragFilePart = [{
+          fileData: {
+            fileUri: ragFile.uri,
+            mimeType: ragFile.mimeType
+          }
+        }];
+      } catch (ragError) {
+        console.warn("Continuing chat session without RAG document integration:", ragError);
+      }
+
       const systemInstruction = `你是一個溫暖且富有洞察力的藝術反思伴侶（Voice of Arts）。
 你的任務是引導使用者觀察梁奕焚的畫作或其他當代藝術作品，啟發他們的個人反思。
-核心原則：
-1. 結合 RAG 背景庫：適時帶入梁奕焚的風格背景（如：常民生活日常百態、小人物的尊嚴、強烈色彩、原始性、傳統工藝的傳承等），作為對話的基底。
-2. 開放式提問 (引发思考) - 必須根據使用者上傳的畫面具體細節（如人物動作、色彩對比、物件）提出開放式問題，讓使用者思考「你覺得主角在做什麼？」或「這顏色帶給你什麼感受？」等。絕對不要只是單向輸出知識。
-3. 保留模糊性 (Preserve Ambiguity)：當使用者認真回覆後，先肯定他們的有趣觀點，然後可以保留模糊性地給出另一種可能的藝術史解讀（如：部分學者認為... 但也有另一種解讀是...），鼓勵他們對藝術的多元詮釋。
 
-如果使用者是第一次進入對話（沒有歷史紀錄）：
-第一句話先打招呼，點出畫面中明顯的特徵或氛圍（根據上傳圖片），然後直接提出一個開放式問題詢問他們的感受或想法。
-如果使用者已經有回覆：
-給予回應鼓勵，補充一點相關文化或歷史脈絡，並可視情況進行下一個提問或是適度總結。`;
+核心原則：
+1. 結合隨附的《DNAofLiangYifen.pdf》藝術家文獻（RAG背景庫）：你必須完全依據文獻內容，確保對話中融入梁奕焚的生平背景（如：師承李仲生研究現代藝術、在紐約SOHO常駐創作的歷程、移居台東都蘭「秘園」與「大方屋」的生活與創作天命等）以及他三十年創作的思考和理念（如：鄉愁文化、黑美人畫作、常民生活、原始性與純粹性、傳統工藝的結合、 Picasso與Léger對他的啟發、人體與菩薩的比例轉化等）。
+2. 開放式提問 (引發思考)：必須根據使用者上傳的畫面具體細節（如人物動作、色彩對比、物件）提出開放式問題，引導使用者思考自己的感受，絕對不要單向灌輸知識。
+3. 保留模糊性 (Preserve Ambiguity)：肯定使用者的有趣觀點，然後從文獻中給予另一種可能的藝術思考或背景脈絡（如：藝術家本人曾提到...），鼓勵多元詮釋。
+
+當使用者問及藝術家的生平或理念時，請精確引用文獻（DNAofLiangYifen.pdf）中的內容回答。`;
 
       let contents: any[] = [];
       let imagePart: any[] = [];
@@ -143,7 +183,8 @@ async function startServer() {
             role: 'user',
             parts: [
               ...imagePart,
-              { text: "請根據這幅圖片，包含以下系統識別出的重點：" + JSON.stringify(hotspots || []) + "，作為藝術反思伴侶開場，說明這幅作品的獨特之處，並向我提出一個具體畫面的反思問題。" }
+              ...ragFilePart,
+              { text: "請根據這幅圖片，隨附的藝術家文獻，以及以下系統識別出的重點：" + JSON.stringify(hotspots || []) + "，作為藝術反思伴侶開場，融合藝術家理念與生平背景，說明這幅作品的獨特之處，並向我提出一個具體畫面的反思問題。" }
             ]
           }
         ];
@@ -152,13 +193,19 @@ async function startServer() {
           role: msg.sender === 'user' ? 'user' : 'model',
           parts: [{ text: msg.text }]
         }));
-        // Prepend image to the first user message if history exists
-        if (imagePart.length > 0) {
-          const firstUserMsgIndex = contents.findIndex(c => c.role === 'user');
-          if (firstUserMsgIndex !== -1) {
+        // Prepend image and RAG file to the first user message if history exists
+        const firstUserMsgIndex = contents.findIndex(c => c.role === 'user');
+        if (firstUserMsgIndex !== -1) {
+          if (ragFilePart.length > 0) {
+            contents[firstUserMsgIndex].parts.unshift(ragFilePart[0]);
+          }
+          if (imagePart.length > 0) {
             contents[firstUserMsgIndex].parts.unshift(imagePart[0]);
-          } else {
-            contents.unshift({ role: 'user', parts: imagePart });
+          }
+        } else {
+          const parts = [...imagePart, ...ragFilePart];
+          if (parts.length > 0) {
+            contents.unshift({ role: 'user', parts });
           }
         }
       }
@@ -169,7 +216,7 @@ async function startServer() {
         config: { systemInstruction }
       });
 
-      res.json({ reply: response.text, source: "資料來源：藝術家散文與年譜 (RAG模擬)" });
+      res.json({ reply: response.text, source: "資料來源：梁奕焚《DNAofLiangYifen.pdf》藝術家文獻" });
     } catch (error) {
       console.error("Chat Error:", error);
       res.status(500).json({ error: "Failed to generate reply" });
